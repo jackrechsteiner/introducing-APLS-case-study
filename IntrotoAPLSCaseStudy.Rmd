@@ -2,7 +2,9 @@
 title: "Intro to APLS Case Study"
 author: "Jack Rechsteiner"
 date: "2025-06-15"
-output: html_document
+output: 
+  github_document: 
+    toc: TRUE
 ---
 
 ```{r setup, include=FALSE}
