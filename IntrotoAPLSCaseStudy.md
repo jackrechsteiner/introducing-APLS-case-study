@@ -11,7 +11,7 @@ Jack Rechsteiner
 
 ``` r
 #reading in vowel data
-vowel_data <- read.csv("results_processwithpraat.csv") |>
+vowel_data <- read.csv("csvs/results_processwithpraat.csv") |>
   mutate(Neighborhood = case_when(startsWith(Speaker, "CB") ~ "Cranberry Township",
                                   startsWith(Speaker, "FH") ~ "Forest Hills",
                                   startsWith(Speaker, "HD") ~ "Hill District",
