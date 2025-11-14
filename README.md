@@ -10,10 +10,11 @@ This README page describes the APLS case study, how the files relate to the APLS
 
 ## Description of case study
 
-The case study presented here uses data from APLS to analyze the diphthong /aʊ/ in closed syllables. 
-This diphthong makes for a good case study because pronouncing /aʊ/ like [aː] is emblematic of Pittsburghese (both in [academic work](https://doi.org/10.1215/00031283-77-2-148) and [mainstream media](https://www.wesa.fm/arts-sports-culture/2017-09-28/redd-up-your-pittsburghese-a-deep-dive-into-how-yinz-talk)). 
+The case study presented here uses data from [APLS](https://apls.pitt.edu/) to analyze the diphthong /aʊ/ in closed syllables. 
 
-Additionally, a case study on a sociophonetic variable allows us to demonstrate how APLS makes it possible to conduct complex analyses in relatively easy steps.
+The /aʊ/ diphthong makes for a good case study of Pittsburgh speech because pronouncing /aʊ/ like [aː] is emblematic of Pittsburghese (both in [academic work](https://doi.org/10.1215/00031283-77-2-148) and [mainstream media](https://www.wesa.fm/arts-sports-culture/2017-09-28/redd-up-your-pittsburghese-a-deep-dive-into-how-yinz-talk)). 
+
+Additionally, a case study on a sociophonetic variable allows us to demonstrate how [APLS](https://apls.pitt.edu/) makes it possible to conduct complex analyses in relatively easy steps.
 
 ## Using this repo
 
