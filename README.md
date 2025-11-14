@@ -3,8 +3,10 @@
 The GitHub repository [`jackrechsteiner/introducing-APLS-case-study`](https://github.com/jackrechsteiner/introducing-APLS-case-study) hosts the files necessary for replicating the case study discussed in *Introducing the Archive of Pittsburgh Language and Speech (APLS), a publicly accessible, richly annotated corpus of sociolinguistic interviews* by Villarreal, Rechsteiner, Johnstone, & Kiesling (2025).
 
 If you are interested in signing up for or signing into the APLS corpus, please visit [apls.pitt.edu](https://apls.pitt.edu/). 
-The documentation for using the APLS corpus can be found at [djvill.github.io/APLS](https://djvill.github.io/APLS/).
-This README page describes the files in this repository, and how the files relate to the APLS case study.
+
+If you are looking for the documentation pages for the APLS corpus, those can be found at [djvill.github.io/APLS](https://djvill.github.io/APLS/).
+
+This README page describes the APLS case study, how the files relate to the APLS case study, and what files are in this repository.
 
 ## Description of case study
 
