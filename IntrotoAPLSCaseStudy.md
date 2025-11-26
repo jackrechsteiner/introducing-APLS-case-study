@@ -4,8 +4,19 @@ Jack Rechsteiner
 2025-06-15
 
 - [Simple vowel case study](#simple-vowel-case-study)
-- [Don’t use: Speaker trajectories](#dont-use-speaker-trajectories)
+- [Not used in article: Speaker
+  trajectories](#not-used-in-article-speaker-trajectories)
 - [Session Info](#session-info)
+
+Note: This script uses the `joeyr` package for finding outliers, measure
+euclidian distance, and ANAE normalization. However, `joeyr` is not
+available on CRAN. To install `joeyr`:
+
+    #install.packages("devtools") # <- if not already installed
+    devtools::install_github("JoeyStanley/joeyr")
+
+You can find more about `joeyr` at
+<https://github.com/JoeyStanley/joeyr>.
 
 ## Simple vowel case study
 
@@ -18,10 +29,113 @@ vowel_data <- read.csv("csvs/results_processwithpraat.csv") |>
                                   startsWith(Speaker, "LV") ~ "Lawrenceville",
                                   TRUE ~ "Interviewer"))
 
+#lets take a quick look to make sure the data read in correctly
+vowel_data |> 
+  head()
+```
+
+               Title                                          SearchName Number
+    1 Search results phonemes=.*6[pbtdkgfvTDszSZhJ_mnNlrwjFHP] segment=6      1
+    2 Search results phonemes=.*6[pbtdkgfvTDszSZhJ_mnNlrwjFHP] segment=6      2
+    3 Search results phonemes=.*6[pbtdkgfvTDszSZhJ_mnNlrwjFHP] segment=6      3
+    4 Search results phonemes=.*6[pbtdkgfvTDszSZhJ_mnNlrwjFHP] segment=6      4
+    5 Search results phonemes=.*6[pbtdkgfvTDszSZhJ_mnNlrwjFHP] segment=6      5
+    6 Search results phonemes=.*6[pbtdkgfvTDszSZhJ_mnNlrwjFHP] segment=6      6
+              Transcript           Speaker    Line LineEnd
+    1 CB01interview1.eaf Barbara Johnstone  20.860  29.431
+    2 CB01interview1.eaf Barbara Johnstone 238.681 239.999
+    3 CB01interview1.eaf Barbara Johnstone 292.018 294.228
+    4 CB01interview2.eaf Barbara Johnstone 119.593 122.137
+    5 CB01interview2.eaf Barbara Johnstone 205.334 205.848
+    6 CB01interview2.eaf Barbara Johnstone 240.621 241.834
+                                                                                                       MatchId
+    1 g_352;em_12_107932;n_3092553-n_4584645;p_146;#=es_1_1767198;prefix=0001-;[0]=ew_0_685107;[1]=ew_0_685107
+    2 g_352;em_12_108054;n_3092671-n_4584700;p_146;#=es_1_1767905;prefix=0002-;[0]=ew_0_685768;[1]=ew_0_685768
+    3 g_352;em_12_108083;n_3092697-n_4584714;p_146;#=es_1_1768027;prefix=0003-;[0]=ew_0_685933;[1]=ew_0_685933
+    4 g_353;em_12_108579;n_3097998-n_4584878;p_146;#=es_1_1769656;prefix=0004-;[0]=ew_0_688639;[1]=ew_0_688639
+    5 g_353;em_12_108629;n_3098049-n_4584902;p_146;#=es_1_1769974;prefix=0005-;[0]=ew_0_688900;[1]=ew_0_688900
+    6 g_353;em_12_108651;n_3098069-n_4584908;p_146;#=es_1_1770007;prefix=0006-;[0]=ew_0_689001;[1]=ew_0_689001
+                                                                                     URL
+    1 https://apls.pitt.edu/labbcat/transcript?transcript=CB01interview1.eaf#ew_0_685107
+    2 https://apls.pitt.edu/labbcat/transcript?transcript=CB01interview1.eaf#ew_0_685768
+    3 https://apls.pitt.edu/labbcat/transcript?transcript=CB01interview1.eaf#ew_0_685933
+    4 https://apls.pitt.edu/labbcat/transcript?transcript=CB01interview2.eaf#ew_0_688639
+    5 https://apls.pitt.edu/labbcat/transcript?transcript=CB01interview2.eaf#ew_0_688900
+    6 https://apls.pitt.edu/labbcat/transcript?transcript=CB01interview2.eaf#ew_0_689001
+      Before.Match     Text After.Match Target.word Target.word.start
+    1          for      our         own         our            27.730
+    2         what    about        your       about           239.211
+    3           my hometown                hometown           293.598
+    4      talking  about .         and     about .           120.503
+    5         that  about ?                 about ?           205.514
+    6        comes      out       later         out           240.821
+      Target.word.end Target.phonemes Target.orthography Target.segment
+    1          27.830              6r                our              6
+    2         239.331            @b6t              about              6
+    3         294.078          h5mt6n           hometown              6
+    4         120.723            @b6t              about              6
+    5         205.744            @b6t              about              6
+    6         241.021              6t                out              6
+      Target.segment.start Target.segment.end time_0.2 F1.time_0.2 F2.time_0.2
+    1               27.730             27.760   27.736         641        1331
+    2              239.271            239.301  239.277         600        1513
+    3              293.898            294.018  293.922         472        1571
+    4              120.563            120.693  120.589         506        1520
+    5              205.574            205.714  205.602         647        1518
+    6              240.821            240.981  240.853         639        1523
+      time_0.5 F1.time_0.5 F2.time_0.5 time_0.8 F1.time_0.8 F2.time_0.8 Error
+    1   27.745         625        1268   27.754         603        1261    NA
+    2  239.286         624        1572  239.295         618        1590    NA
+    3  293.958         341        1472  293.994         397        1416    NA
+    4  120.628         590        1454  120.667         496        1448    NA
+    5  205.644         658        1385  205.686         641        1292    NA
+    6  240.901         649        1402  240.949         619        1284    NA
+      Neighborhood
+    1  Interviewer
+    2  Interviewer
+    3  Interviewer
+    4  Interviewer
+    5  Interviewer
+    6  Interviewer
+
+``` r
+#it looks good, but there's more columns here than we need
+
 vowel_data_smaller <- vowel_data %>%
   #dropping unnecessary columns
   select(Speaker, Neighborhood, Text, Target.phonemes, starts_with("F"), MatchId)
 
+#another quick look
+vowel_data_smaller |> 
+  head()
+```
+
+                Speaker Neighborhood     Text Target.phonemes F1.time_0.2
+    1 Barbara Johnstone  Interviewer      our              6r         641
+    2 Barbara Johnstone  Interviewer    about            @b6t         600
+    3 Barbara Johnstone  Interviewer hometown          h5mt6n         472
+    4 Barbara Johnstone  Interviewer  about .            @b6t         506
+    5 Barbara Johnstone  Interviewer  about ?            @b6t         647
+    6 Barbara Johnstone  Interviewer      out              6t         639
+      F2.time_0.2 F1.time_0.5 F2.time_0.5 F1.time_0.8 F2.time_0.8
+    1        1331         625        1268         603        1261
+    2        1513         624        1572         618        1590
+    3        1571         341        1472         397        1416
+    4        1520         590        1454         496        1448
+    5        1518         658        1385         641        1292
+    6        1523         649        1402         619        1284
+                                                                                                       MatchId
+    1 g_352;em_12_107932;n_3092553-n_4584645;p_146;#=es_1_1767198;prefix=0001-;[0]=ew_0_685107;[1]=ew_0_685107
+    2 g_352;em_12_108054;n_3092671-n_4584700;p_146;#=es_1_1767905;prefix=0002-;[0]=ew_0_685768;[1]=ew_0_685768
+    3 g_352;em_12_108083;n_3092697-n_4584714;p_146;#=es_1_1768027;prefix=0003-;[0]=ew_0_685933;[1]=ew_0_685933
+    4 g_353;em_12_108579;n_3097998-n_4584878;p_146;#=es_1_1769656;prefix=0004-;[0]=ew_0_688639;[1]=ew_0_688639
+    5 g_353;em_12_108629;n_3098049-n_4584902;p_146;#=es_1_1769974;prefix=0005-;[0]=ew_0_688900;[1]=ew_0_688900
+    6 g_353;em_12_108651;n_3098069-n_4584908;p_146;#=es_1_1770007;prefix=0006-;[0]=ew_0_689001;[1]=ew_0_689001
+
+``` r
+#that's much better!
+
+#now that the data is easier to work with, lets remove outliers, normalize measurements, and do some subsetting
 vowel_data_outliers_removed <-
   vowel_data_smaller %>%
   group_by(Speaker) %>%
@@ -35,12 +149,10 @@ vowel_data_outliers_removed <-
 vowel_data_normed <-
   vowel_data_outliers_removed %>% 
   group_by(Speaker) %>% 
-  joeyr::norm_anae(hz_cols = c(F1.time_0.2, F2.time_0.2, F1.time_0.5, F2.time_0.5, F1.time_0.8, F2.time_0.8), token_id = row.names(.), speaker_id = Speaker) %>%
+  joeyr_norm_anae(hz_cols = c(F1.time_0.2, F2.time_0.2, F1.time_0.5, F2.time_0.5, F1.time_0.8, F2.time_0.8), token_id = row.names(.), speaker_id = Speaker) %>%
   ungroup() 
 
 #subsetting to remove incomplete words
-#I'm unsure of how /r/ or morphology affects this, so words like "how's" and "cow's" have not been removed
-#i'm also assuming vowel stress doesn't matter because it wasn't included in the APLS search
 vowel_data_subset <- 
   vowel_data_normed %>% 
   filter(!str_detect(Text, "~$")) %>% 
@@ -55,7 +167,22 @@ vowel_data_longer <-
   pivot_longer(ends_with("_anae"), names_to=c(".value","timestamp"), names_pattern="(F[12]).time_(0\\.\\d)_anae") |>
   ##Remove unnormalized meas
   select(-contains("time_"))
+
+#and here's how the data looks before we start plotting it
+vowel_data_longer |> 
+  head()
 ```
+
+    # A tibble: 6 × 10
+      Speaker Neighborhood Text  Target.phonemes MatchId vowel traj_length timestamp
+      <chr>   <chr>        <chr> <chr>           <chr>   <chr>       <dbl> <chr>    
+    1 Barbar… Interviewer  our   6r              g_352;… AW          1933. 0.2      
+    2 Barbar… Interviewer  our   6r              g_352;… AW          1933. 0.5      
+    3 Barbar… Interviewer  our   6r              g_352;… AW          1933. 0.8      
+    4 Barbar… Interviewer  about @b6t            g_352;… AW          2774. 0.2      
+    5 Barbar… Interviewer  about @b6t            g_352;… AW          2774. 0.5      
+    6 Barbar… Interviewer  about @b6t            g_352;… AW          2774. 0.8      
+    # ℹ 2 more variables: F1 <dbl>, F2 <dbl>
 
 ``` r
 #plotting the vowel data
@@ -94,7 +221,7 @@ vowel_data_longer |>
 
 ![](Images/all_trajectories-1.png)<!-- -->
 
-## Don’t use: Speaker trajectories
+## Not used in article: Speaker trajectories
 
 ``` r
 vowel_data_means <- 
@@ -104,6 +231,7 @@ vowel_data_means <-
             .by=c(Speaker, timestamp)) |>
   ##Break Cranberry Township across two lines
   mutate(across(Neighborhood, \(x) if_else(x=="Cranberry Township", "Cranberry\nTownship", x)))
+
 vowel_data_means |>
   filter(Neighborhood != "Interviewer") |>
   ggplot(aes(x = F2, y = F1, color=Neighborhood)) +
@@ -163,6 +291,27 @@ vowel_data_longer |>
   theme_classic()
 ```
 
+For now, let’s use color to indicate trajectory length and facet the
+plots by neighborhood to make the differences easier to see.
+
+``` r
+vowel_data_means |>
+  filter(Neighborhood != "Interviewer") |>
+  ggplot(aes(x = F2, y = F1, color=traj_length)) +
+  geom_path(aes(group=Speaker), alpha=0.5,arrow=arrow(length=unit(0.125, "inches"))) +
+  geom_text(data=vowel_data_means |>
+              filter(Neighborhood != "Interviewer",
+                     timestamp==0.2),
+            aes(label = Speaker), show.legend=FALSE) +
+  facet_wrap(~ Neighborhood) +
+  #flipping the scales, like a good vowel plot should
+  scale_x_reverse("F1 (ANAE-normalized Hz)") + 
+  scale_y_reverse("F2 (ANAE-normalized Hz)") +
+  theme_classic()
+```
+
+![](Images/trajectories_by_neighborhood-1.png)<!-- -->
+
 # Session Info
 
 ``` r
@@ -187,7 +336,7 @@ sessionInfo()
     [1] stats     graphics  grDevices utils     datasets  methods   base     
 
     other attached packages:
-     [1] joeyr_0.9       tidynorm_0.3.0  lubridate_1.9.4 forcats_1.0.0  
+     [1] joeyr_0.11      tidynorm_0.3.0  lubridate_1.9.4 forcats_1.0.0  
      [5] stringr_1.5.1   dplyr_1.1.4     purrr_1.1.0     readr_2.1.5    
      [9] tidyr_1.3.1     tibble_3.3.0    ggplot2_3.5.2   tidyverse_2.0.0
 

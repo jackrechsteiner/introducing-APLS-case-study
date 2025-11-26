@@ -12,12 +12,21 @@ output:
 knitr::opts_chunk$set(echo = TRUE, include = TRUE, comment=NA, 
                       fig.path = "Images/", dpi=300)
 
-#load tidyverse
+#load packages
 library("tidyverse")
 library("tidynorm")
 library("joeyr")
 ```
 
+Note: This script uses the `joeyr` package for finding outliers, measure euclidian distance, and ANAE normalization.
+However, `joeyr` is not available on CRAN.
+To install `joeyr`:
+```
+#install.packages("devtools") # <- if not already installed
+devtools::install_github("JoeyStanley/joeyr")
+```
+
+You can find more about `joeyr` at [https://github.com/JoeyStanley/joeyr](https://github.com/JoeyStanley/joeyr).
 
 ## Simple vowel case study
 
@@ -30,10 +39,21 @@ vowel_data <- read.csv("csvs/results_processwithpraat.csv") |>
                                   startsWith(Speaker, "LV") ~ "Lawrenceville",
                                   TRUE ~ "Interviewer"))
 
+#lets take a quick look to make sure the data read in correctly
+vowel_data |> 
+  head()
+#it looks good, but there's more columns here than we need
+
 vowel_data_smaller <- vowel_data %>%
   #dropping unnecessary columns
   select(Speaker, Neighborhood, Text, Target.phonemes, starts_with("F"), MatchId)
 
+#another quick look
+vowel_data_smaller |> 
+  head()
+#that's much better!
+
+#now that the data is easier to work with, lets remove outliers, normalize measurements, and do some subsetting
 vowel_data_outliers_removed <-
   vowel_data_smaller %>%
   group_by(Speaker) %>%
@@ -47,12 +67,10 @@ vowel_data_outliers_removed <-
 vowel_data_normed <-
   vowel_data_outliers_removed %>% 
   group_by(Speaker) %>% 
-  joeyr::norm_anae(hz_cols = c(F1.time_0.2, F2.time_0.2, F1.time_0.5, F2.time_0.5, F1.time_0.8, F2.time_0.8), token_id = row.names(.), speaker_id = Speaker) %>%
+  joeyr_norm_anae(hz_cols = c(F1.time_0.2, F2.time_0.2, F1.time_0.5, F2.time_0.5, F1.time_0.8, F2.time_0.8), token_id = row.names(.), speaker_id = Speaker) %>%
   ungroup() 
 
 #subsetting to remove incomplete words
-#I'm unsure of how /r/ or morphology affects this, so words like "how's" and "cow's" have not been removed
-#i'm also assuming vowel stress doesn't matter because it wasn't included in the APLS search
 vowel_data_subset <- 
   vowel_data_normed %>% 
   filter(!str_detect(Text, "~$")) %>% 
@@ -67,6 +85,10 @@ vowel_data_longer <-
   pivot_longer(ends_with("_anae"), names_to=c(".value","timestamp"), names_pattern="(F[12]).time_(0\\.\\d)_anae") |>
   ##Remove unnormalized meas
   select(-contains("time_"))
+
+#and here's how the data looks before we start plotting it
+vowel_data_longer |> 
+  head()
 ```
 
 
@@ -104,7 +126,7 @@ vowel_data_longer |>
   theme_classic()
 ```
 
-## Don't use: Speaker trajectories
+## Not used in article: Speaker trajectories
 
 ```{r speaker_trajectories}
 vowel_data_means <- 
@@ -114,6 +136,7 @@ vowel_data_means <-
             .by=c(Speaker, timestamp)) |>
   ##Break Cranberry Township across two lines
   mutate(across(Neighborhood, \(x) if_else(x=="Cranberry Township", "Cranberry\nTownship", x)))
+
 vowel_data_means |>
   filter(Neighborhood != "Interviewer") |>
   ggplot(aes(x = F2, y = F1, color=Neighborhood)) +
@@ -150,6 +173,24 @@ vowel_data_longer |>
   scale_x_reverse("F1 (ANAE-normalized Hz)") + 
   scale_y_reverse("F2 (ANAE-normalized Hz)") +
   labs(color="Trajectory\nlength (Hz)") +
+  theme_classic()
+```
+
+For now, let's use color to indicate trajectory length and facet the plots by neighborhood to make the differences easier to see.
+
+```{r trajectories_by_neighborhood}
+vowel_data_means |>
+  filter(Neighborhood != "Interviewer") |>
+  ggplot(aes(x = F2, y = F1, color=traj_length)) +
+  geom_path(aes(group=Speaker), alpha=0.5,arrow=arrow(length=unit(0.125, "inches"))) +
+  geom_text(data=vowel_data_means |>
+              filter(Neighborhood != "Interviewer",
+                     timestamp==0.2),
+            aes(label = Speaker), show.legend=FALSE) +
+  facet_wrap(~ Neighborhood) +
+  #flipping the scales, like a good vowel plot should
+  scale_x_reverse("F1 (ANAE-normalized Hz)") + 
+  scale_y_reverse("F2 (ANAE-normalized Hz)") +
   theme_classic()
 ```
 
