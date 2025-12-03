@@ -20,16 +20,25 @@ You can find more about `joeyr` at
 
 ## Simple vowel case study
 
+We’ll start off with reading in the vowel data and taking a look to make
+sure it loaded correctly.
+
+While we’re at it, we’ll also create columns for the full Neighborhood
+names and a column that reminds us what vowel we’re working with.
+
 ``` r
 #reading in vowel data
 vowel_data <- read.csv("csvs/results_processwithpraat.csv") |>
-  mutate(Neighborhood = case_when(startsWith(Speaker, "CB") ~ "Cranberry Township",
+  mutate(
+    #basing the values for the Neighborhood column on the neighborhood code in the speaker column
+    Neighborhood = case_when(startsWith(Speaker, "CB") ~ "Cranberry Township",
                                   startsWith(Speaker, "FH") ~ "Forest Hills",
                                   startsWith(Speaker, "HD") ~ "Hill District",
                                   startsWith(Speaker, "LV") ~ "Lawrenceville",
-                                  TRUE ~ "Interviewer"))
+                                  TRUE ~ "Interviewer"),
+    #our results only included the "AW" vowel, so we can have "AW" be the value for every row of this column
+    vowel = "AW")
 
-#lets take a quick look to make sure the data read in correctly
 vowel_data |> 
   head()
 ```
@@ -90,20 +99,21 @@ vowel_data |>
     4  120.628         590        1454  120.667         496        1448    NA
     5  205.644         658        1385  205.686         641        1292    NA
     6  240.901         649        1402  240.949         619        1284    NA
-      Neighborhood
-    1  Interviewer
-    2  Interviewer
-    3  Interviewer
-    4  Interviewer
-    5  Interviewer
-    6  Interviewer
+      Neighborhood vowel
+    1  Interviewer    AW
+    2  Interviewer    AW
+    3  Interviewer    AW
+    4  Interviewer    AW
+    5  Interviewer    AW
+    6  Interviewer    AW
+
+The data looks good, but there’s more columns here than we need. Let’s
+just select the columns we’ll actually be working with.
 
 ``` r
-#it looks good, but there's more columns here than we need
-
 vowel_data_smaller <- vowel_data %>%
-  #dropping unnecessary columns
-  select(Speaker, Neighborhood, Text, Target.phonemes, starts_with("F"), MatchId)
+  #selecting only necessary columns
+  select(Speaker, Neighborhood, Text, Target.phonemes, starts_with("F"), MatchId, vowel)
 
 #another quick look
 vowel_data_smaller |> 
@@ -131,17 +141,26 @@ vowel_data_smaller |>
     4 g_353;em_12_108579;n_3097998-n_4584878;p_146;#=es_1_1769656;prefix=0004-;[0]=ew_0_688639;[1]=ew_0_688639
     5 g_353;em_12_108629;n_3098049-n_4584902;p_146;#=es_1_1769974;prefix=0005-;[0]=ew_0_688900;[1]=ew_0_688900
     6 g_353;em_12_108651;n_3098069-n_4584908;p_146;#=es_1_1770007;prefix=0006-;[0]=ew_0_689001;[1]=ew_0_689001
+      vowel
+    1    AW
+    2    AW
+    3    AW
+    4    AW
+    5    AW
+    6    AW
+
+Now we have a data frame that will be easier to manage in our workflow.
+
+Next, let’s remove outliers, normalize measurements, and do some
+subsetting on the data.
 
 ``` r
-#that's much better!
-
-#now that the data is easier to work with, lets remove outliers, normalize measurements, and do some subsetting
 vowel_data_outliers_removed <-
   vowel_data_smaller %>%
   group_by(Speaker) %>%
-  #finding outliers based on all F1 and F2 measurements
   ##Drop speakers w/ fewer than 75 tokens for reliable outlier-checking
   filter(n() >= 75,
+         #finding outliers based on all F1 and F2 measurements
          !find_outliers(F1.time_0.2, F2.time_0.2, F1.time_0.5, F2.time_0.5, F1.time_0.8, F2.time_0.8)) %>%
   ungroup()
 
@@ -154,21 +173,27 @@ vowel_data_normed <-
 
 #subsetting to remove incomplete words
 vowel_data_subset <- 
-  vowel_data_normed %>% 
-  filter(!str_detect(Text, "~$")) %>% 
-  #adding in a "vowel" column to help with plotting
-  mutate(vowel = "AW",
-         traj_length = eucl_dist(F2.time_0.2_anae, F1.time_0.2_anae, F2.time_0.5_anae, F1.time_0.5_anae) +
-           eucl_dist(F2.time_0.5_anae, F1.time_0.5_anae, F2.time_0.8_anae, F1.time_0.8_anae))
+  vowel_data_normed |>  
+  filter(!str_detect(Text, "~$"))
+```
 
-##Longer for geom_paths
+The final steps we’ll do before making plots are calculating the
+trajectory length of vowel tokens and pivoting the data to be longer.
+
+We’ll also take another look at the data to see what shape it’s in
+before plotting it.
+
+``` r
 vowel_data_longer <-
   vowel_data_subset |>
+  #calculating trajectory length
+  mutate(traj_length = eucl_dist(F2.time_0.2_anae, F2.time_0.5_anae, F1.time_0.2_anae, F1.time_0.5_anae) +
+           eucl_dist(F2.time_0.5_anae, F2.time_0.8_anae, F1.time_0.5_anae, F1.time_0.8_anae)) |> 
+  ##Longer for geom_paths
   pivot_longer(ends_with("_anae"), names_to=c(".value","timestamp"), names_pattern="(F[12]).time_(0\\.\\d)_anae") |>
   ##Remove unnormalized meas
   select(-contains("time_"))
 
-#and here's how the data looks before we start plotting it
 vowel_data_longer |> 
   head()
 ```
@@ -176,13 +201,15 @@ vowel_data_longer |>
     # A tibble: 6 × 10
       Speaker Neighborhood Text  Target.phonemes MatchId vowel traj_length timestamp
       <chr>   <chr>        <chr> <chr>           <chr>   <chr>       <dbl> <chr>    
-    1 Barbar… Interviewer  our   6r              g_352;… AW          1933. 0.2      
-    2 Barbar… Interviewer  our   6r              g_352;… AW          1933. 0.5      
-    3 Barbar… Interviewer  our   6r              g_352;… AW          1933. 0.8      
-    4 Barbar… Interviewer  about @b6t            g_352;… AW          2774. 0.2      
-    5 Barbar… Interviewer  about @b6t            g_352;… AW          2774. 0.5      
-    6 Barbar… Interviewer  about @b6t            g_352;… AW          2774. 0.8      
+    1 Barbar… Interviewer  our   6r              g_352;… AW           91.4 0.2      
+    2 Barbar… Interviewer  our   6r              g_352;… AW           91.4 0.5      
+    3 Barbar… Interviewer  our   6r              g_352;… AW           91.4 0.8      
+    4 Barbar… Interviewer  about @b6t            g_352;… AW           85.8 0.2      
+    5 Barbar… Interviewer  about @b6t            g_352;… AW           85.8 0.5      
+    6 Barbar… Interviewer  about @b6t            g_352;… AW           85.8 0.8      
     # ℹ 2 more variables: F1 <dbl>, F2 <dbl>
+
+The first plot is all the midpoints for all the vowels in the subset.
 
 ``` r
 #plotting the vowel data
@@ -204,6 +231,9 @@ ggplot(vowel_data_subset, aes(x = F2.time_0.5_anae, y = F1.time_0.5_anae, color 
 
 ![](Images/all_midpoints-1.png)<!-- -->
 
+The second plot is the trajectories of all the subset vowels by
+participant neighborhood, excluding tokens from interviewers.
+
 ``` r
 vowel_data_longer |>
   filter(Neighborhood != "Interviewer") |>
@@ -222,6 +252,15 @@ vowel_data_longer |>
 ![](Images/all_trajectories-1.png)<!-- -->
 
 ## Not used in article: Speaker trajectories
+
+It seems like there are some neighborhood-level differences in vowel
+productions, and we can investigate this further by looking at the
+average trajectories by speaker.
+
+Note: These plots are not included in *Introducing the Archive of
+Pittsburgh Language and Speech (APLS), a publicly accessible, richly
+annotated corpus of sociolinguistic interviews* but are included here as
+they may be of interest to other researchers.
 
 ``` r
 vowel_data_means <- 
@@ -248,58 +287,22 @@ vowel_data_means |>
 
 ![](Images/speaker_trajectories-1.png)<!-- -->
 
-But this plot is misleading. It suggests that FH20 has
-shorter-trajectory tokens and HD09 longer, but in reality, HD09’s mean
-trajectory length is the shortest, FH20’s the longest:
+This is nice, but it’s still a little messy and it isn’t capturing any
+information about participant’s average trajectory lengths.
 
-``` r
-vowel_data_means |>
-  distinct(Speaker, Neighborhood, traj_length) |>
-  arrange(traj_length)
-```
-
-    # A tibble: 29 × 3
-       Speaker        Neighborhood          traj_length
-       <chr>          <chr>                       <dbl>
-     1 HD09           "Hill District"             1369.
-     2 FH17           "Forest Hills"              1554.
-     3 HD01           "Hill District"             1572.
-     4 LV17           "Lawrenceville"             1587.
-     5 LV11           "Lawrenceville"             1592.
-     6 HD23           "Hill District"             1608.
-     7 HD06           "Hill District"             1616.
-     8 Interviewer HD "Interviewer"               1631.
-     9 FH27           "Forest Hills"              1743.
-    10 CB10           "Cranberry\nTownship"       1765.
-    # ℹ 19 more rows
-
-That’s because these are just averages over their onset, midpoint, and
-offset measurements.
-
-``` r
-vowel_data_longer |>
-  # filter(Speaker %in% c("FH20","HD09","LV04","LV17")) |>
-  filter(Speaker %in% c("FH20","HD09")) |>
-  ggplot(aes(x = F2, y = F1, color=traj_length)) +
-  #making slightly transparent points for each individual vowel
-  geom_path(aes(group=MatchId), alpha=0.5, arrow=arrow(length=unit(0.05, "inches"))) +
-  facet_wrap(~ Speaker) +
-  #flipping the scales, like a good vowel plot should
-  scale_x_reverse("F1 (ANAE-normalized Hz)") + 
-  scale_y_reverse("F2 (ANAE-normalized Hz)") +
-  labs(color="Trajectory\nlength (Hz)") +
-  theme_classic()
-```
-
-For now, let’s use color to indicate trajectory length and facet the
+Instead, let’s use color to indicate trajectory length and facet the
 plots by neighborhood to make the differences easier to see.
 
 ``` r
 vowel_data_means |>
   filter(Neighborhood != "Interviewer") |>
+  #changing Cranberry Township back to a space instead of a newline break
+  mutate(across(Neighborhood, \(x) if_else(x=="Cranberry\nTownship", "Cranberry Township", x))) |> 
   ggplot(aes(x = F2, y = F1, color=traj_length)) +
   geom_path(aes(group=Speaker), alpha=0.5,arrow=arrow(length=unit(0.125, "inches"))) +
   geom_text(data=vowel_data_means |>
+              #changing Cranberry Township back to a space instead of a newline break
+              mutate(across(Neighborhood, \(x) if_else(x=="Cranberry\nTownship", "Cranberry Township", x))) |> 
               filter(Neighborhood != "Interviewer",
                      timestamp==0.2),
             aes(label = Speaker), show.legend=FALSE) +

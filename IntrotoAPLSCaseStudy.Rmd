@@ -10,7 +10,7 @@ output:
 ```{r setup, include=FALSE}
 ##Set knitr options (show both code and output, show output w/o leading #)
 knitr::opts_chunk$set(echo = TRUE, include = TRUE, comment=NA, 
-                      fig.path = "Images/", dpi=300)
+                      fig.path = "Images/", dpi = 300)
 
 #load packages
 library("tidyverse")
@@ -30,36 +30,51 @@ You can find more about `joeyr` at [https://github.com/JoeyStanley/joeyr](https:
 
 ## Simple vowel case study
 
+We'll start off with reading in the vowel data and taking a look to make sure it loaded correctly.
+
+While we're at it, we'll also create columns for the full Neighborhood names and a column that reminds us what vowel we're working with.
+
 ```{r}
 #reading in vowel data
 vowel_data <- read.csv("csvs/results_processwithpraat.csv") |>
-  mutate(Neighborhood = case_when(startsWith(Speaker, "CB") ~ "Cranberry Township",
+  mutate(
+    #basing the values for the Neighborhood column on the neighborhood code in the speaker column
+    Neighborhood = case_when(startsWith(Speaker, "CB") ~ "Cranberry Township",
                                   startsWith(Speaker, "FH") ~ "Forest Hills",
                                   startsWith(Speaker, "HD") ~ "Hill District",
                                   startsWith(Speaker, "LV") ~ "Lawrenceville",
-                                  TRUE ~ "Interviewer"))
+                                  TRUE ~ "Interviewer"),
+    #our results only included the "AW" vowel, so we can have "AW" be the value for every row of this column
+    vowel = "AW")
 
-#lets take a quick look to make sure the data read in correctly
 vowel_data |> 
   head()
-#it looks good, but there's more columns here than we need
+```
 
+The data looks good, but there's more columns here than we need.
+Let's just select the columns we'll actually be working with.
+
+```{r}
 vowel_data_smaller <- vowel_data %>%
-  #dropping unnecessary columns
-  select(Speaker, Neighborhood, Text, Target.phonemes, starts_with("F"), MatchId)
+  #selecting only necessary columns
+  select(Speaker, Neighborhood, Text, Target.phonemes, starts_with("F"), MatchId, vowel)
 
 #another quick look
 vowel_data_smaller |> 
   head()
-#that's much better!
+```
 
-#now that the data is easier to work with, let's remove outliers, normalize measurements, and do some subsetting
+Now we have a data frame that will be easier to manage in our workflow.
+
+Next, let's remove outliers, normalize measurements, and do some subsetting on the data.
+
+```{r}
 vowel_data_outliers_removed <-
   vowel_data_smaller %>%
   group_by(Speaker) %>%
-  #finding outliers based on all F1 and F2 measurements
   ##Drop speakers w/ fewer than 75 tokens for reliable outlier-checking
   filter(n() >= 75,
+         #finding outliers based on all F1 and F2 measurements
          !find_outliers(F1.time_0.2, F2.time_0.2, F1.time_0.5, F2.time_0.5, F1.time_0.8, F2.time_0.8)) %>%
   ungroup()
 
@@ -72,25 +87,30 @@ vowel_data_normed <-
 
 #subsetting to remove incomplete words
 vowel_data_subset <- 
-  vowel_data_normed %>% 
-  filter(!str_detect(Text, "~$")) %>% 
-  #adding in a "vowel" column to help with plotting
-  mutate(vowel = "AW",
-         traj_length = eucl_dist(F2.time_0.2_anae, F1.time_0.2_anae, F2.time_0.5_anae, F1.time_0.5_anae) +
-           eucl_dist(F2.time_0.5_anae, F1.time_0.5_anae, F2.time_0.8_anae, F1.time_0.8_anae))
+  vowel_data_normed |>  
+  filter(!str_detect(Text, "~$"))
+```
 
-##Longer for geom_paths
+The final steps we'll do before making plots are calculating the trajectory length of vowel tokens and pivoting the data to be longer.
+
+We'll also take another look at the data to see what shape it's in before plotting it.
+
+```{r}
 vowel_data_longer <-
   vowel_data_subset |>
+  #calculating trajectory length
+  mutate(traj_length = eucl_dist(F2.time_0.2_anae, F2.time_0.5_anae, F1.time_0.2_anae, F1.time_0.5_anae) +
+           eucl_dist(F2.time_0.5_anae, F2.time_0.8_anae, F1.time_0.5_anae, F1.time_0.8_anae)) |> 
+  ##Longer for geom_paths
   pivot_longer(ends_with("_anae"), names_to=c(".value","timestamp"), names_pattern="(F[12]).time_(0\\.\\d)_anae") |>
   ##Remove unnormalized meas
   select(-contains("time_"))
 
-#and here's how the data looks before we start plotting it
 vowel_data_longer |> 
   head()
 ```
 
+The first plot is all the midpoints for all the vowels in the subset.
 
 ```{r all_midpoints}
 #plotting the vowel data
@@ -110,6 +130,7 @@ ggplot(vowel_data_subset, aes(x = F2.time_0.5_anae, y = F1.time_0.5_anae, color 
   theme(legend.position="none")
 ```
 
+The second plot is the trajectories of all the subset vowels by participant neighborhood, excluding tokens from interviewers.
 
 ```{r all_trajectories}
 vowel_data_longer |>
@@ -127,6 +148,10 @@ vowel_data_longer |>
 ```
 
 ## Not used in article: Speaker trajectories
+
+It seems like there are some neighborhood-level differences in vowel productions, and we can investigate this further by looking at the average trajectories by speaker.
+
+Note: These plots are not included in *Introducing the Archive of Pittsburgh Language and Speech (APLS), a publicly accessible, richly annotated corpus of sociolinguistic interviews* but are included here as they may be of interest to other researchers.
 
 ```{r speaker_trajectories}
 vowel_data_means <- 
@@ -151,39 +176,20 @@ vowel_data_means |>
   theme_classic()
 ```
 
-But this plot is misleading. It suggests that FH20 has shorter-trajectory tokens and HD09 longer, but in reality, HD09's mean trajectory length is the shortest, FH20's the longest:
+This is nice, but it's still a little messy and it isn't capturing any information about participant's average trajectory lengths.
 
-```{r}
-vowel_data_means |>
-  distinct(Speaker, Neighborhood, traj_length) |>
-  arrange(traj_length)
-```
-
-That's because these are just averages over their onset, midpoint, and offset measurements.
-
-```{r, fig.keep='none'}
-vowel_data_longer |>
-  # filter(Speaker %in% c("FH20","HD09","LV04","LV17")) |>
-  filter(Speaker %in% c("FH20","HD09")) |>
-  ggplot(aes(x = F2, y = F1, color=traj_length)) +
-  #making slightly transparent points for each individual vowel
-  geom_path(aes(group=MatchId), alpha=0.5, arrow=arrow(length=unit(0.05, "inches"))) +
-  facet_wrap(~ Speaker) +
-  #flipping the scales, like a good vowel plot should
-  scale_x_reverse("F1 (ANAE-normalized Hz)") + 
-  scale_y_reverse("F2 (ANAE-normalized Hz)") +
-  labs(color="Trajectory\nlength (Hz)") +
-  theme_classic()
-```
-
-For now, let's use color to indicate trajectory length and facet the plots by neighborhood to make the differences easier to see.
+Instead, let's use color to indicate trajectory length and facet the plots by neighborhood to make the differences easier to see.
 
 ```{r trajectories_by_neighborhood}
 vowel_data_means |>
   filter(Neighborhood != "Interviewer") |>
+  #changing Cranberry Township back to a space instead of a newline break
+  mutate(across(Neighborhood, \(x) if_else(x=="Cranberry\nTownship", "Cranberry Township", x))) |> 
   ggplot(aes(x = F2, y = F1, color=traj_length)) +
   geom_path(aes(group=Speaker), alpha=0.5,arrow=arrow(length=unit(0.125, "inches"))) +
   geom_text(data=vowel_data_means |>
+              #changing Cranberry Township back to a space instead of a newline break
+              mutate(across(Neighborhood, \(x) if_else(x=="Cranberry\nTownship", "Cranberry Township", x))) |> 
               filter(Neighborhood != "Interviewer",
                      timestamp==0.2),
             aes(label = Speaker), show.legend=FALSE) +
@@ -193,7 +199,6 @@ vowel_data_means |>
   scale_y_reverse("F2 (ANAE-normalized Hz)") +
   theme_classic()
 ```
-
 
 
 # Session Info
