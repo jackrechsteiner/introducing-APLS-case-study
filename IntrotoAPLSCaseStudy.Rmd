@@ -53,7 +53,7 @@ vowel_data_smaller |>
   head()
 #that's much better!
 
-#now that the data is easier to work with, lets remove outliers, normalize measurements, and do some subsetting
+#now that the data is easier to work with, let's remove outliers, normalize measurements, and do some subsetting
 vowel_data_outliers_removed <-
   vowel_data_smaller %>%
   group_by(Speaker) %>%
