@@ -57,7 +57,7 @@ Let's just select the columns we'll actually be working with.
 ```{r}
 vowel_data_smaller <- vowel_data %>%
   #selecting only necessary columns
-  select(Speaker, Neighborhood, Text, Target.phonemes, starts_with("F"), MatchId, vowel)
+  select(Speaker, Neighborhood, Text, syllables, starts_with("F"), MatchId, vowel)
 
 #another quick look
 vowel_data_smaller |> 
