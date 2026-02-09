@@ -1,8 +1,10 @@
 ---
 title: "Intro to APLS Case Study"
 author: "Jack Rechsteiner"
-date: "2025-06-15"
+date: "2025-06-15, last updated 2026-02-09"
 output: 
+  html_document:
+    toc: true
   github_document: 
     toc: TRUE
 ---
