@@ -24,8 +24,8 @@ Note: This script uses the `joeyr` package for finding outliers, measure euclidi
 However, `joeyr` is not available on CRAN.
 To install `joeyr`:
 ```
-#install.packages("devtools") # <- if not already installed
-devtools::install_github("JoeyStanley/joeyr")
+#install.packages("pak") # <- if not already installed
+pak::pak("JoeyStanley/joeyr")
 ```
 
 You can find more about `joeyr` at [https://github.com/JoeyStanley/joeyr](https://github.com/JoeyStanley/joeyr).

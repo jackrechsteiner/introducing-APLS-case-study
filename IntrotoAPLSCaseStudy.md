@@ -1,7 +1,7 @@
 Intro to APLS Case Study
 ================
 Jack Rechsteiner
-2025-06-15, last updated 2026-02-09
+2025-06-15, last updated 2026-10-16
 
 - [Simple vowel case study](#simple-vowel-case-study)
 - [Not used in article: Speaker
@@ -12,8 +12,8 @@ Note: This script uses the `joeyr` package for finding outliers, measure
 euclidian distance, and ANAE normalization. However, `joeyr` is not
 available on CRAN. To install `joeyr`:
 
-    #install.packages("devtools") # <- if not already installed
-    devtools::install_github("JoeyStanley/joeyr")
+    #install.packages("pak") # <- if not already installed
+    pak::pak("JoeyStanley/joeyr")
 
 You can find more about `joeyr` at
 <https://github.com/JoeyStanley/joeyr>.
@@ -223,8 +223,8 @@ ggplot(vowel_data_subset, aes(x = F2.time_0.5_anae, y = F1.time_0.5_anae, color 
                summarise(across(ends_with("0.5_anae"), mean),
                          across(vowel, unique))) +
   #flipping the scales, like a good vowel plot should
-  scale_x_reverse("F1 (ANAE-normalized Hz)") + 
-  scale_y_reverse("F2 (ANAE-normalized Hz)") +
+  scale_x_reverse("F2 (ANAE-normalized Hz)") + 
+  scale_y_reverse("F1 (ANAE-normalized Hz)") +
   theme_classic() + 
   theme(legend.position="none")
 ```
@@ -243,8 +243,8 @@ vowel_data_longer |>
   geom_path(aes(group=MatchId), alpha=0.2, arrow=arrow(length=unit(0.05, "inches"))) +
   facet_wrap(~ Neighborhood) +
   #flipping the scales, like a good vowel plot should
-  scale_x_reverse("F1 (ANAE-normalized Hz)") + 
-  scale_y_reverse("F2 (ANAE-normalized Hz)") +
+  scale_x_reverse("F2 (ANAE-normalized Hz)") + 
+  scale_y_reverse("F1 (ANAE-normalized Hz)") +
   labs(color="Trajectory\nlength (Hz)") +
   theme_classic()
 ```
@@ -280,8 +280,8 @@ vowel_data_means |>
                      timestamp==0.2),
             aes(label = Speaker), show.legend=FALSE) +
   #flipping the scales, like a good vowel plot should
-  scale_x_reverse("F1 (ANAE-normalized Hz)") + 
-  scale_y_reverse("F2 (ANAE-normalized Hz)") +
+  scale_x_reverse("F2 (ANAE-normalized Hz)") + 
+  scale_y_reverse("F1 (ANAE-normalized Hz)") +
   theme_classic()
 ```
 
@@ -308,8 +308,8 @@ vowel_data_means |>
             aes(label = Speaker), show.legend=FALSE) +
   facet_wrap(~ Neighborhood) +
   #flipping the scales, like a good vowel plot should
-  scale_x_reverse("F1 (ANAE-normalized Hz)") + 
-  scale_y_reverse("F2 (ANAE-normalized Hz)") +
+  scale_x_reverse("F2 (ANAE-normalized Hz)") + 
+  scale_y_reverse("F1 (ANAE-normalized Hz)") +
   theme_classic()
 ```
 
@@ -321,35 +321,39 @@ vowel_data_means |>
 sessionInfo()
 ```
 
-    R version 4.3.2 (2023-10-31)
-    Platform: x86_64-apple-darwin20 (64-bit)
-    Running under: macOS 15.3.1
+    R version 4.6.1 (2026-06-24 ucrt)
+    Platform: x86_64-w64-mingw32/x64
+    Running under: Windows 11 x64 (build 26100)
 
     Matrix products: default
-    BLAS:   /Library/Frameworks/R.framework/Versions/4.3-x86_64/Resources/lib/libRblas.0.dylib 
-    LAPACK: /Library/Frameworks/R.framework/Versions/4.3-x86_64/Resources/lib/libRlapack.dylib;  LAPACK version 3.11.0
+      LAPACK version 3.12.1
 
     locale:
-    [1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+    [1] LC_COLLATE=English_United States.utf8 
+    [2] LC_CTYPE=English_United States.utf8   
+    [3] LC_MONETARY=English_United States.utf8
+    [4] LC_NUMERIC=C                          
+    [5] LC_TIME=English_United States.utf8    
 
-    time zone: America/Detroit
+    time zone: America/New_York
     tzcode source: internal
 
     attached base packages:
     [1] stats     graphics  grDevices utils     datasets  methods   base     
 
     other attached packages:
-     [1] joeyr_0.11      tidynorm_0.3.0  lubridate_1.9.4 forcats_1.0.0  
-     [5] stringr_1.5.1   dplyr_1.1.4     purrr_1.1.0     readr_2.1.5    
-     [9] tidyr_1.3.1     tibble_3.3.0    ggplot2_3.5.2   tidyverse_2.0.0
+     [1] joeyr_0.11.1    tidynorm_0.4.1  lubridate_1.9.5 forcats_1.0.1  
+     [5] stringr_1.6.0   dplyr_1.2.1     purrr_1.2.2     readr_2.2.0    
+     [9] tidyr_1.3.2     tibble_3.3.1    ggplot2_4.0.3   tidyverse_2.0.0
 
     loaded via a namespace (and not attached):
-     [1] gtable_0.3.6       compiler_4.3.2     Rcpp_1.1.0         tidyselect_1.2.1  
-     [5] scales_1.4.0       yaml_2.3.10        fastmap_1.2.0      R6_2.6.1          
-     [9] labeling_0.4.3     generics_0.1.4     knitr_1.50         MASS_7.3-60.0.1   
-    [13] pillar_1.11.0      RColorBrewer_1.1-3 tzdb_0.5.0         rlang_1.1.6       
-    [17] utf8_1.2.6         stringi_1.8.7      xfun_0.52          timechange_0.3.0  
-    [21] cli_3.6.5          withr_3.0.2        magrittr_2.0.3     digest_0.6.37     
-    [25] grid_4.3.2         rstudioapi_0.17.1  hms_1.1.3          lifecycle_1.0.4   
-    [29] vctrs_0.6.5        evaluate_1.0.4     glue_1.8.0         farver_2.1.2      
-    [33] rmarkdown_2.29     tools_4.3.2        pkgconfig_2.0.3    htmltools_0.5.8.1 
+     [1] gtable_0.3.6       compiler_4.6.1     Rcpp_1.1.2         tidyselect_1.2.1  
+     [5] scales_1.4.0       yaml_2.3.12        fastmap_1.2.0      R6_2.6.1          
+     [9] labeling_0.4.3     generics_0.1.4     knitr_1.51         MASS_7.3-66       
+    [13] backports_1.5.1    checkmate_2.3.4    pillar_1.11.1      RColorBrewer_1.1-3
+    [17] tzdb_0.5.0         rlang_1.3.0        utf8_1.2.6         stringi_1.8.9     
+    [21] xfun_0.60          S7_0.2.2           otel_0.2.0         timechange_0.4.0  
+    [25] cli_3.6.6          withr_3.0.3        magrittr_2.0.5     options_0.3.1     
+    [29] digest_0.6.39      grid_4.6.1         hms_1.1.4          lifecycle_1.0.5   
+    [33] vctrs_0.7.3        evaluate_1.0.5     glue_1.8.1         farver_2.1.2      
+    [37] rmarkdown_2.31     tools_4.6.1        pkgconfig_2.0.3    htmltools_0.5.9   
