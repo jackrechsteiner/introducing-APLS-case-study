@@ -1,7 +1,7 @@
 ---
 title: "Intro to APLS Case Study"
 author: "Jack Rechsteiner"
-date: "2025-06-15, last updated 2026-02-09"
+date: "2025-06-15, last updated 2026-10-16"
 output: 
   html_document:
     toc: true
@@ -24,8 +24,8 @@ Note: This script uses the `joeyr` package for finding outliers, measure euclidi
 However, `joeyr` is not available on CRAN.
 To install `joeyr`:
 ```
-#install.packages("devtools") # <- if not already installed
-devtools::install_github("JoeyStanley/joeyr")
+#install.packages("pak") # <- if not already installed
+pak::pak("JoeyStanley/joeyr")
 ```
 
 You can find more about `joeyr` at [https://github.com/JoeyStanley/joeyr](https://github.com/JoeyStanley/joeyr).
@@ -126,8 +126,8 @@ ggplot(vowel_data_subset, aes(x = F2.time_0.5_anae, y = F1.time_0.5_anae, color 
                summarise(across(ends_with("0.5_anae"), mean),
                          across(vowel, unique))) +
   #flipping the scales, like a good vowel plot should
-  scale_x_reverse("F1 (ANAE-normalized Hz)") + 
-  scale_y_reverse("F2 (ANAE-normalized Hz)") +
+  scale_x_reverse("F2 (ANAE-normalized Hz)") + 
+  scale_y_reverse("F1 (ANAE-normalized Hz)") +
   theme_classic() + 
   theme(legend.position="none")
 ```
@@ -143,8 +143,8 @@ vowel_data_longer |>
   geom_path(aes(group=MatchId), alpha=0.2, arrow=arrow(length=unit(0.05, "inches"))) +
   facet_wrap(~ Neighborhood) +
   #flipping the scales, like a good vowel plot should
-  scale_x_reverse("F1 (ANAE-normalized Hz)") + 
-  scale_y_reverse("F2 (ANAE-normalized Hz)") +
+  scale_x_reverse("F2 (ANAE-normalized Hz)") + 
+  scale_y_reverse("F1 (ANAE-normalized Hz)") +
   labs(color="Trajectory\nlength (Hz)") +
   theme_classic()
 ```
@@ -173,8 +173,8 @@ vowel_data_means |>
                      timestamp==0.2),
             aes(label = Speaker), show.legend=FALSE) +
   #flipping the scales, like a good vowel plot should
-  scale_x_reverse("F1 (ANAE-normalized Hz)") + 
-  scale_y_reverse("F2 (ANAE-normalized Hz)") +
+  scale_x_reverse("F2 (ANAE-normalized Hz)") + 
+  scale_y_reverse("F1 (ANAE-normalized Hz)") +
   theme_classic()
 ```
 
@@ -197,8 +197,8 @@ vowel_data_means |>
             aes(label = Speaker), show.legend=FALSE) +
   facet_wrap(~ Neighborhood) +
   #flipping the scales, like a good vowel plot should
-  scale_x_reverse("F1 (ANAE-normalized Hz)") + 
-  scale_y_reverse("F2 (ANAE-normalized Hz)") +
+  scale_x_reverse("F2 (ANAE-normalized Hz)") + 
+  scale_y_reverse("F1 (ANAE-normalized Hz)") +
   theme_classic()
 ```
 
